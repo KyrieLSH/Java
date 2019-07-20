@@ -83,6 +83,17 @@ public abstract class AopNamespaceUtils {
 	private static void useClassProxyingIfNecessary(BeanDefinitionRegistry registry, @Nullable Element sourceElement) {
 		if (sourceElement != null) {
 			boolean proxyTargetClass = Boolean.parseBoolean(sourceElement.getAttribute(PROXY_TARGET_CLASS_ATTRIBUTE));
+			/**
+			 * 对proxy-target-class属性的处理
+			 * Spring AOP部分使用JDK动态代理或者CGLIB来为目标对象创建代理(尽量使用JDK的动态代理)
+			 * 如果被代理的目标对象实现了至少一个接口,则会使用 JDK 动态代理(所有该目标类型实现的接口都将被代理)
+			 * 若该目标对象没有实现任何接口,则创建一个 CGLIB 代理
+			 * 如果你希望强制使用 CGLIB 代理(例如希望代理目标对象的所有方法,而不只是实现自接口的方法),那也可以但是需妥考虑
+			 * 以下两个问题
+			 * 无须通知(advise)Final方法,因为它们不能被覆盖
+			 * 你需要将 CGLIB 二进制友行包放在 classpath 下面
+			 * 强制使用 CGLIB 代理需要将proxy-target-class 属性设为 true
+			 */
 			if (proxyTargetClass) {
 				AopConfigUtils.forceAutoProxyCreatorToUseClassProxying(registry);
 			}
