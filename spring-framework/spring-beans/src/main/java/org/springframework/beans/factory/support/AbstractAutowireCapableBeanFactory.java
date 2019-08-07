@@ -430,7 +430,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object result = existingBean;
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
 			/**
-			 * 调用所有的后置处理器的before的方法
+			 * 调用所有的后置处理器的after的方法
 			 */
 			Object current = processor.postProcessAfterInitialization(result, beanName);
 			if (current == null) {
@@ -520,7 +520,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
 			/**
 			 * 获取一个解析之后的代理bean的实例(不是真正的bean实例)
-			 * 当前还只是一个bean定义,无法代理
 			 * 作用:找到切面进行缓存
 			 */
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
@@ -648,7 +647,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			/**
 			 * 处理循环引用问题
 			 * 缓存早期对象(未实例化的对象)
-			 * getEarlyBeanReference对bean依赖引用,主要应用SmartInstantiationAware,BeanPostProcessor
+			 * getEarlyBeanReference对bean依赖引用(用于解决循环创建代理对象)
 			 * AOP就是在这里将advice动态织入bean中,若没有直接返回bean，不做任何处理
 			 */
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
@@ -2083,7 +2082,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		else {
 			/**
-			 * 调用bean实现的 XXXAware接口
+			 * 调用bean实现的 XXXAware接口(像Aware这种后缀的接口作用,一般都是通过容器调用传入一些容器相关的类,让实现这些接口的bean可以直接使用者容器相关的类)
+			 * 如果bean实现了BeanFactoryAware,则会调用这个bean的setBeanFactory方法
 			 */
 			invokeAwareMethods(beanName, bean);
 		}
@@ -2091,14 +2091,15 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
 			/**
-			 * 调用bean的后置处理器的before方法
+			 * 调用bean的后置处理器的postProcessBeforeInitialization方法
+			 * 在bean初始化之前调用
 			 */
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
 		try {
 			/**
-			 * 调用initianlBean的方法和自定义的init方法
+			 * 执行当前bean的自定义初始化方法
 			 */
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		}
@@ -2109,7 +2110,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
 			/**
-			 * 调用Bean的后置处理器的post方法
+			 * 调用Bean的后置处理器的postProcessAfterInitialization方法
+			 * 在bean的初始化之后调用
 			 */
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}

@@ -63,6 +63,9 @@ public class SimpleAliasRegistry implements AliasRegistry {
 				if (registeredName != null) {
 					if (registeredName.equals(name)) {
 						// An existing alias - no need to re-register
+						/**
+						 * 如果已注册,则直接返回
+						 */
 						return;
 					}
 					if (!allowAliasOverriding()) {
@@ -74,7 +77,13 @@ public class SimpleAliasRegistry implements AliasRegistry {
 								registeredName + "' with new target name '" + name + "'");
 					}
 				}
+				/**
+				 * 检查是否有循环别名注册
+				 */
 				checkForAliasCircle(name, alias);
+				/**
+				 * 将别名作为key,目标bean名称作为值注册到存储别名的Map中
+				 */
 				this.aliasMap.put(alias, name);
 				if (logger.isTraceEnabled()) {
 					logger.trace("Alias definition '" + alias + "' registered for name '" + name + "'");

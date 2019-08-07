@@ -312,6 +312,9 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 */
 	public int loadBeanDefinitions(EncodedResource encodedResource) throws BeanDefinitionStoreException {
+		/**
+		 * 将xml文件转换为了一个InputStream,最终通过调用doLoadBeanDefinitions()方法进行bean信息的注册
+		 */
 		Assert.notNull(encodedResource, "EncodedResource must not be null");
 		if (logger.isTraceEnabled()) {
 			logger.trace("Loading XML bean definitions from " + encodedResource);
@@ -389,7 +392,13 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 			throws BeanDefinitionStoreException {
 
 		try {
+			/**
+			 * 将资源文件转换为一个Document对象,该对象中保存有各个xml文件中各个节点和子节点的相关信息
+			 */
 			Document doc = doLoadDocument(inputSource, resource);
+			/**
+			 * 通过转换得到的Document对象,通过registerBeanDefinitions()方法完成Bean的注册
+			 */
 			int count = registerBeanDefinitions(doc, resource);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Loaded " + count + " bean definitions from " + resource);
@@ -510,6 +519,9 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	public int registerBeanDefinitions(Document doc, Resource resource) throws BeanDefinitionStoreException {
 		BeanDefinitionDocumentReader documentReader = createBeanDefinitionDocumentReader();
 		int countBefore = getRegistry().getBeanDefinitionCount();
+		/**
+		 *
+		 */
 		documentReader.registerBeanDefinitions(doc, createReaderContext(resource));
 		return getRegistry().getBeanDefinitionCount() - countBefore;
 	}

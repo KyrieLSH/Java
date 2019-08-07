@@ -226,13 +226,18 @@ public abstract class AopUtils {
 		if (!pc.getClassFilter().matches(targetClass)) {
 			return false;
 		}
-
+		/**
+		 * 获取方法匹配器
+		 */
 		MethodMatcher methodMatcher = pc.getMethodMatcher();
 		if (methodMatcher == MethodMatcher.TRUE) {
 			// No need to iterate the methods if we're matching any method anyway...
 			return true;
 		}
 
+		/**
+		 * 包装方法匹配器
+		 */
 		IntroductionAwareMethodMatcher introductionAwareMethodMatcher = null;
 		if (methodMatcher instanceof IntroductionAwareMethodMatcher) {
 			introductionAwareMethodMatcher = (IntroductionAwareMethodMatcher) methodMatcher;
@@ -244,6 +249,9 @@ public abstract class AopUtils {
 		}
 		classes.addAll(ClassUtils.getAllInterfacesForClassAsSet(targetClass));
 
+		/**
+		 * 循环匹配方法
+		 */
 		for (Class<?> clazz : classes) {
 			Method[] methods = ReflectionUtils.getAllDeclaredMethods(clazz);
 			for (Method method : methods) {
@@ -281,6 +289,9 @@ public abstract class AopUtils {
 	 * @return whether the pointcut can apply on any method
 	 */
 	public static boolean canApply(Advisor advisor, Class<?> targetClass, boolean hasIntroductions) {
+		/**
+		 * 判断是当前的增强器是否能用 通过方法匹配来计算当前是否合适当前类的增强器
+		 */
 		if (advisor instanceof IntroductionAdvisor) {
 			return ((IntroductionAdvisor) advisor).getClassFilter().matches(targetClass);
 		}
@@ -307,17 +318,29 @@ public abstract class AopUtils {
 			return candidateAdvisors;
 		}
 		List<Advisor> eligibleAdvisors = new ArrayList<>();
+		/**
+		 * 遍历候选的增强器,获取可用的增强器
+		 */
 		for (Advisor candidate : candidateAdvisors) {
+			/**
+			 * 首先处理引介增强器
+			 */
 			if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
 				eligibleAdvisors.add(candidate);
 			}
 		}
 		boolean hasIntroductions = !eligibleAdvisors.isEmpty();
 		for (Advisor candidate : candidateAdvisors) {
+			/**
+			 * 引介增强器已经处理
+			 */
 			if (candidate instanceof IntroductionAdvisor) {
 				// already processed
 				continue;
 			}
+			/**
+			 * 对于普通bean的处理
+			 */
 			if (canApply(candidate, clazz, hasIntroductions)) {
 				eligibleAdvisors.add(candidate);
 			}

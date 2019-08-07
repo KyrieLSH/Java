@@ -96,7 +96,9 @@ public abstract class AopConfigUtils {
 	@Nullable
 	public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(
 			BeanDefinitionRegistry registry, @Nullable Object source) {
-
+		/**
+		 * 注册一个AnnotationAwareAspectJAutoProxyCreator（注解适配的切面自动创建器）
+		 */
 		return registerOrEscalateApcAsRequired(AnnotationAwareAspectJAutoProxyCreator.class, registry, source);
 	}
 
@@ -141,6 +143,10 @@ public abstract class AopConfigUtils {
 			return null;
 		}
 
+		/**
+		 * 如果不存在已经注册的Aop的bean，则生成一个，并且设置其执行优先级为最高优先级，并且标识
+		 * 该bean为Spring的系统Bean，设置完之后则对该bean进行注册
+		 */
 		RootBeanDefinition beanDefinition = new RootBeanDefinition(cls);
 		beanDefinition.setSource(source);
 		beanDefinition.getPropertyValues().add("order", Ordered.HIGHEST_PRECEDENCE);

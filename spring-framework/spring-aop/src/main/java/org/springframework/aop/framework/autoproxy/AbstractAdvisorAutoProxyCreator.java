@@ -60,6 +60,11 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 			throw new IllegalArgumentException(
 					"AdvisorAutoProxyCreator requires a ConfigurableListableBeanFactory: " + beanFactory);
 		}
+		/**
+		 * 创建一个aspect的增强器工厂(aspectJAdvisorFactory)通过@Apsectj注解的方式
+		 * 然后将aspect的增强器工厂(aspectJAdvisorFactory)包装为aspect增强器构建器BeanFactoryAspectJAdvisorsBuilderAdapter(aspectJAdvisorsBuilder)
+		 * aspectJAdvisorsBuilder用于把切面转换为增强器
+		 */
 		initBeanFactory((ConfigurableListableBeanFactory) beanFactory);
 	}
 
@@ -73,6 +78,9 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	protected Object[] getAdvicesAndAdvisorsForBean(
 			Class<?> beanClass, String beanName, @Nullable TargetSource targetSource) {
 
+		/**
+		 * 查找符合条件的增强器
+		 */
 		List<Advisor> advisors = findEligibleAdvisors(beanClass, beanName);
 		if (advisors.isEmpty()) {
 			return DO_NOT_PROXY;
@@ -91,7 +99,13 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	 * @see #extendAdvisors
 	 */
 	protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
+		/**
+		 * 找到候选的增强器
+		 */
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
+		/**
+		 * 从候选的增强器中找到可用的增强器
+		 */
 		List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
 		extendAdvisors(eligibleAdvisors);
 		if (!eligibleAdvisors.isEmpty()) {

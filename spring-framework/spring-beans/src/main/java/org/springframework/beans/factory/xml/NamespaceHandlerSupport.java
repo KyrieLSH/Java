@@ -66,11 +66,21 @@ public abstract class NamespaceHandlerSupport implements NamespaceHandler {
 	/**
 	 * Parses the supplied {@link Element} by delegating to the {@link BeanDefinitionParser} that is
 	 * registered for that {@link Element}.
+	 * 这里的parse()方法首先会查找当前标签定义的处理逻辑对象，找到后则调用其parse()方法对其进行处理
+	 * 这里的parser也即我们定义的AppleBeanDefinitionParser.parse()方法
+	 * 这里需要注意的是，我们在前面讲过，在MyNameSpaceHandler.init()方法中注册的处理类逻辑的键（即apple）必须与xml文件中myapple:apple后的apple一致
+	 * 这就是这里findParserForElement()方法查找BeanDefinitionParser处理逻辑的依据
 	 */
 	@Override
 	@Nullable
 	public BeanDefinition parse(Element element, ParserContext parserContext) {
+		/**
+		 * 获取当前标签使用的parser处理类
+		 */
 		BeanDefinitionParser parser = findParserForElement(element, parserContext);
+		/**
+		 * 按照定义的parser处理类对当前标签进行处理,这里的处理类即我们定义的AppleBeanDefinitionParser
+		 */
 		return (parser != null ? parser.parse(element, parserContext) : null);
 	}
 
@@ -80,7 +90,13 @@ public abstract class NamespaceHandlerSupport implements NamespaceHandler {
 	 */
 	@Nullable
 	private BeanDefinitionParser findParserForElement(Element element, ParserContext parserContext) {
+		/**
+		 * 获取当前标签命名空间后的局部键名,即apple
+		 */
 		String localName = parserContext.getDelegate().getLocalName(element);
+		/**
+		 * 通过使用的命名空间键获取对应的BeanDefinitionParser处理逻辑
+		 */
 		BeanDefinitionParser parser = this.parsers.get(localName);
 		if (parser == null) {
 			parserContext.getReaderContext().fatal(

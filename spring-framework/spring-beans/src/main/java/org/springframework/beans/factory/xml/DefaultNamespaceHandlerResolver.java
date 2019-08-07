@@ -111,28 +111,53 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 	 * from the configured mappings.
 	 * @param namespaceUri the relevant namespace URI
 	 * @return the located {@link NamespaceHandler}, or {@code null} if none found
+	 * 首先会判断是否存在当前url的处理逻辑，不存在则直接返回
+	 * 如果存在，则会判断其为一个NamespaceHandler对象，还是一个全路径的类名，是NamespaceHandler对象则强制类型转换后返回
+	 * 否则通过反射初始化该类，并调用其初始化方法，然后才返回
 	 */
 	@Override
 	@Nullable
 	public NamespaceHandler resolve(String namespaceUri) {
+		/**
+		 * 获取handlerMapping对象，其键为当前的命名空间url
+		 * 值为当前命名空间的处理逻辑类对象，或者为处理逻辑类的包含全路径的类名
+		 */
 		Map<String, Object> handlerMappings = getHandlerMappings();
+		/**
+		 * 查看是否存在当前url的处理类逻辑,没有则返回null
+		 */
 		Object handlerOrClassName = handlerMappings.get(namespaceUri);
 		if (handlerOrClassName == null) {
 			return null;
 		}
 		else if (handlerOrClassName instanceof NamespaceHandler) {
+			/**
+			 * 如果存在当前url对应的处理类对象,则直接返回该处理对象
+			 */
 			return (NamespaceHandler) handlerOrClassName;
 		}
 		else {
+			/**
+			 * 如果当前url对应的处理逻辑还是一个没初始化的全路径类名,则通过反射对其进行初始化
+			 */
 			String className = (String) handlerOrClassName;
 			try {
 				Class<?> handlerClass = ClassUtils.forName(className, this.classLoader);
+				/**
+				 * 判断该全路径类是否为NamespaceHandler接口的实现类
+				 */
 				if (!NamespaceHandler.class.isAssignableFrom(handlerClass)) {
 					throw new FatalBeanException("Class [" + className + "] for namespace [" + namespaceUri +
 							"] does not implement the [" + NamespaceHandler.class.getName() + "] interface");
 				}
 				NamespaceHandler namespaceHandler = (NamespaceHandler) BeanUtils.instantiateClass(handlerClass);
+				/**
+				 * 调用处理逻辑的初始化方法
+				 */
 				namespaceHandler.init();
+				/**
+				 * 缓存处理逻辑类对象
+				 */
 				handlerMappings.put(namespaceUri, namespaceHandler);
 				return namespaceHandler;
 			}

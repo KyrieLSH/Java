@@ -81,39 +81,77 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 	 * @see #isEligibleBean
 	 */
 	public List<Advisor> buildAspectJAdvisors() {
+		/**
+		 * 获取缓存中的切面的beanName
+		 */
 		List<String> aspectNames = this.aspectBeanNames;
-
+		/**
+		 * 若缓存中不存在
+		 */
 		if (aspectNames == null) {
 			synchronized (this) {
 				aspectNames = this.aspectBeanNames;
 				if (aspectNames == null) {
 					List<Advisor> advisors = new ArrayList<>();
 					aspectNames = new ArrayList<>();
+					/**
+					 * 获取IOC容器中所有的bean
+					 */
 					String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 							this.beanFactory, Object.class, true, false);
+					/**
+					 * 遍历所有的bean
+					 */
 					for (String beanName : beanNames) {
 						if (!isEligibleBean(beanName)) {
 							continue;
 						}
 						// We must be careful not to instantiate beans eagerly as in this case they
 						// would be cached by the Spring container but would not have been weaved.
+						/**
+						 * bean的类型
+						 */
 						Class<?> beanType = this.beanFactory.getType(beanName);
 						if (beanType == null) {
 							continue;
 						}
+						/**
+						 * 判断bean是否是切面
+						 */
 						if (this.advisorFactory.isAspect(beanType)) {
+							/**
+							 * 将beanName加入到切面缓存中(表示当前bean为切面)
+							 */
 							aspectNames.add(beanName);
+							/**
+							 * 创建一个Aspect类的信息源
+							 */
 							AspectMetadata amd = new AspectMetadata(beanType, beanName);
 							if (amd.getAjType().getPerClause().getKind() == PerClauseKind.SINGLETON) {
 								MetadataAwareAspectInstanceFactory factory =
 										new BeanFactoryAspectInstanceFactory(this.beanFactory, beanName);
+								/**
+								 * 获取切面的增强器(从AspectJ中获取通知器)
+								 */
 								List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
+								/**
+								 * 把切面作为key增强器集合作为value加入到缓存中
+								 */
 								if (this.beanFactory.isSingleton(beanName)) {
+									/**
+									 * 若是切面是单例的,则加入到单例的增强器缓存中
+									 */
 									this.advisorsCache.put(beanName, classAdvisors);
 								}
 								else {
+									/**
+									 * 若切面不是单例的,则加入aspectFactoryCache缓存中
+									 */
 									this.aspectFactoryCache.put(beanName, factory);
 								}
+								/**
+								 * 加入到增强器集合中
+								 */
 								advisors.addAll(classAdvisors);
 							}
 							else {
